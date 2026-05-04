@@ -1,0 +1,144 @@
+# ApexSankey — AI Coding Rules
+
+You are working with ApexSankey, a JavaScript Sankey / flow-diagram library built on SVG.
+Documentation: https://apexcharts.com/docs/apexsankey/
+NPM: apexsankey
+GitHub: https://github.com/apexcharts/apexsankey
+
+## Critical Rules
+
+1. **Data goes to `render(data)`, not the constructor.** Constructor takes `(element, options)`; `render({ nodes, edges, options })` paints.
+2. **`render()` is required** — the constructor alone does nothing visible.
+3. **Every `edge.source` / `edge.target` must reference an existing `node.id`.** Dangling refs silently drop.
+4. **`node.id` must be unique.** Duplicates collide.
+5. **`edge.value` must be a positive number.** Zero / negative produces zero-width bands.
+6. **Cycles are not supported.** ApexSankey is a layered DAG.
+7. **Call `destroy()`** before unmounting in React / Vue / Angular.
+8. **Set license once** with `ApexSankey.setLicense('KEY')` at app startup to remove the watermark.
+9. **`tooltipTemplate({ source, target, value })`** is for edges; **`nodeTooltipTemplate({ node, value })`** is for nodes — different shapes.
+10. **`onNodeClick` is in options**, not on the data.
+
+---
+
+## Data Format
+
+```ts
+{
+  nodes: [{ id: string; title: string; color?: string }],
+  edges: [{ source: string; target: string; value: number; type: string }],
+  options: SankeyOptions,        // pass `sankey.options` back in
+}
+```
+
+```js
+import { ApexSankey } from 'apexsankey';
+
+const sankey = new ApexSankey(document.getElementById('chart'), {
+  width: 800, height: 500, nodeWidth: 24, spacing: 60,
+});
+
+const graph = sankey.render({
+  nodes: [
+    { id: 'a', title: 'Source A' },
+    { id: 'b', title: 'Source B' },
+    { id: 'c', title: 'Hub'      },
+    { id: 'd', title: 'Sink'     },
+  ],
+  edges: [
+    { source: 'a', target: 'c', value: 10, type: 'flow' },
+    { source: 'b', target: 'c', value:  6, type: 'flow' },
+    { source: 'c', target: 'd', value: 16, type: 'flow' },
+  ],
+  options: sankey.options,
+});
+```
+
+Manual layer pinning via `options.order`:
+
+```js
+options: { ...sankey.options, order: [[['a','b']], [['c']], [['d']]] }
+```
+
+---
+
+## Lifecycle
+
+```js
+import { ApexSankey } from 'apexsankey';
+ApexSankey.setLicense('KEY');                  // once at app startup
+const sankey = new ApexSankey(el, opts);       // construct
+const graph  = sankey.render(data);            // REQUIRED
+graph.exportToSvg();                           // optional
+sankey.destroy();                              // before unmount
+```
+
+Re-renders: re-call `sankey.render(data)` with fresh data. No incremental update API.
+
+---
+
+## API
+
+| Method | Description |
+|---|---|
+| `new ApexSankey(el, opts?)` | Construct. |
+| `render(data)` | Paint. Returns `SankeyGraphRenderer`. Required. |
+| `destroy()` | Tear down. |
+| `getInstanceId()` | Unique id. |
+| `ApexSankey.setLicense(key)` | Static. Call once. |
+| `graph.exportToSvg()` | Export as SVG file. |
+
+---
+
+## Pitfalls — ❌ Wrong vs ✅ Correct
+
+### 1. Data on constructor
+❌ `new ApexSankey(el, { nodes, edges, ... })`
+✅ `new ApexSankey(el, options); sankey.render({ nodes, edges, options: sankey.options })`
+
+### 2. Missing `render()`
+❌ Just constructing — nothing paints.
+✅ `sankey.render(data)`.
+
+### 3. Dangling source/target
+❌ Edge references a non-existent node id.
+✅ Verify every endpoint matches a `node.id`.
+
+### 4. Duplicate `node.id`
+❌ Two `{ id: 'a' }` nodes — collision.
+✅ Unique ids.
+
+### 5. `value: 0`
+❌ Zero-width band.
+✅ Positive number; filter out zero-flow edges upstream.
+
+### 6. Cycles
+❌ `a → b → a` — layout breaks.
+✅ Aggregate / break cycles before rendering.
+
+### 7. No `destroy()` in React/Vue
+❌ DOM + observer leak.
+✅ Return `() => sankey.destroy()` from cleanup.
+
+### 8. Wrong tooltip template shape
+❌ Reading `source` / `target` in `nodeTooltipTemplate`.
+✅ Edge template gets `{ source, target, value }`; node template gets `{ node, value }`.
+
+### 9. Missing `options` in render data
+❌ `sankey.render({ nodes, edges })`.
+✅ `sankey.render({ nodes, edges, options: sankey.options })`.
+
+### 10. License watermark
+❌ No license call.
+✅ `ApexSankey.setLicense('KEY')` once at app startup.
+
+---
+
+## Framework Wrappers
+
+```bash
+npm install react-apexsankey   # React
+npm install vue-apexsankey     # Vue 3
+npm install ngx-apexsankey     # Angular
+```
+
+All wrappers call `destroy()` automatically on unmount.
