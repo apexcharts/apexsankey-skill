@@ -6,7 +6,7 @@
 |---|---|---|
 | `edgeOpacity` | `0.4` | Edge band fill opacity. |
 | `edgeGradientFill` | `true` | Gradient between source / target colors. |
-| `edgeGap` | `2` | Gap (px) between adjacent edges at a node connection. |
+| `edgeGap` | `0` | Gap (px) between adjacent edges at a node connection. |
 | `nodeWidth` | `20` | Width of node rectangles (px). |
 | `nodeBorderColor` | `null` | `null` disables. |
 | `nodeBorderWidth` | `1` | px |

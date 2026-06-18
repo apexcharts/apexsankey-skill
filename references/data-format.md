@@ -36,7 +36,7 @@ interface SankeyGraphEdge {
 ```
 
 - Width of the band is proportional to `value`.
-- `type` groups edges visually and is used by `options.alignLinkTypes` and the default tooltip.
+- `type` groups edges visually and is shown in the default tooltip.
 - Cycles (e.g. `a → b → a`) are not supported. Aggregate or break them in your data layer.
 
 ## Layer & band ordering

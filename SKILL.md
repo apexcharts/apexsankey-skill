@@ -12,7 +12,7 @@ description: >
 metadata:
   author: ApexCharts
   version: "1.0.0"
-  library_version: ">=1.0.0"
+  library_version: "1.8.0"
   category: data-visualization
   tags: [sankey, flow, diagram, charts, svg, apexsankey]
   docs: https://apexcharts.com/docs/apexsankey/
@@ -118,7 +118,7 @@ sankey.render({
 | `whitespace` | `number` | `0.18` | Fraction (0–1) of vertical space used as margins. Lower = taller nodes. |
 | `edgeOpacity` | `number` | `0.4` | Edge fill opacity (0–1). |
 | `edgeGradientFill` | `boolean` | `true` | Gradient between source/target colors. |
-| `edgeGap` | `number` | `2` | Gap between adjacent edges at a connection point (px). |
+| `edgeGap` | `number` | `0` | Gap between adjacent edges at a connection point (px). |
 | `enableTooltip` | `boolean` | `true` | Edge hover tooltips. |
 | `enableToolbar` | `boolean` | `true` | Zoom/pan/export toolbar. |
 | `highlightConnectedPath` | `boolean` | `true` | Hover highlights the connected flow. |
