@@ -2,6 +2,16 @@
 
 AI coding skill for building [ApexSankey](https://apexcharts.com/docs/apexsankey/) flow / Sankey diagrams. Works with Claude Code, Cursor, GitHub Copilot, and any AI coding assistant.
 
+> **Separate skill — one of the ApexCharts ecosystem skills.** This is the dedicated skill for **ApexSankey** (`apexsankey`), shipped as its own `apexsankey-skill` package and repo — distinct from the core `apexcharts-skill` and the other product skills. Each product has its own library and skill; use the one that matches yours:
+>
+> | Product | npm library | Skill package & repo |
+> |---|---|---|
+> | ApexCharts — charts | `apexcharts` | [`apexcharts-skill`](https://github.com/apexcharts/apexcharts-skill) |
+> | ApexGantt — Gantt / timeline | `apexgantt` | [`apexgantt-skill`](https://github.com/apexcharts/apexgantt-skill) |
+> | ApexTree — hierarchy / org charts | `apextree` | [`apextree-skill`](https://github.com/apexcharts/apextree-skill) |
+> | **ApexSankey** — flow / Sankey · *this skill* | `apexsankey` | `apexsankey-skill` |
+> | Apex Grid — data grid | `apex-grid` | [`apexgrid-skill`](https://github.com/apexcharts/apexgrid-skill) |
+
 ## What This Does
 
 AI models routinely get Sankey-diagram code wrong: passing data to the constructor, omitting `render()`, dangling `source` / `target` references, dropping `options` from the render payload. This skill ships structured reference files so the assistant generates correct ApexSankey code on the first try.
