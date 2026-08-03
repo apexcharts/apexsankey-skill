@@ -112,6 +112,60 @@ new ApexSankey(el, {
 
 When enabled, ApexSankey applies `role="img"` semantics, an `aria-label`, and a `<desc>` element to the SVG root for screen readers (WCAG 2.1 AA target).
 
+Since 1.9.0 the auto-generated ARIA strings are localizable through `locale.messages` (see below). The `a11y.diagramLabel` string still takes precedence: it hard-overrides the SVG root `aria-label`, while `locale.messages.diagramLabel` supplies the localized default when `a11y.diagramLabel` is not set.
+
+## Localization & RTL (`locale`)
+
+Added in 1.9.0. The `locale` option controls text direction and the screen-reader strings the diagram generates. It is additive: the default is `{ direction: 'ltr' }`, so charts that omit `locale` render identically to earlier builds.
+
+```js
+const sankey = new ApexSankey(el, {
+  locale: {
+    direction: 'rtl',
+    messages: { nodesGroupLabel: 'العقد' },
+  },
+});
+```
+
+### `locale.direction` — `'ltr' | 'rtl' | 'auto'` (default `'ltr'`)
+
+- `'ltr'`: left-to-right (default, unchanged behavior).
+- `'rtl'`: mirrors the diagram horizontally so flows read right-to-left, and sets `dir="rtl"` on the container.
+- `'auto'`: defers to the document/element direction.
+
+### `locale.messages` — `Partial<SankeyMessages>`
+
+Overrides any subset of the accessibility strings. Unset keys keep their English defaults, exported as the `DEFAULT_SANKEY_MESSAGES` constant, so you only translate what you need.
+
+| `SankeyMessages` key | Type | Description |
+|---|---|---|
+| `diagramLabel` | `(ctx: SankeyDiagramLabelContext) => string` | SVG root aria-label summary (node/flow counts plus the largest flow). |
+| `nodeAriaLabel` | `(ctx: SankeyNodeLabelContext) => string` | Per-node aria-label (incoming/outgoing flow summary). |
+| `edgeAriaLabel` | `(ctx: SankeyEdgeLabelContext) => string` | Per-edge aria-label. Default: `Flow from {source} to {target}: {value} units`. |
+| `nodesGroupLabel` | `string` | aria-label for the `<g>` wrapping all nodes. Default: `'Sankey nodes'`. |
+
+The three callback messages receive a typed context object:
+
+- `SankeyDiagramLabelContext`: `{ nodeCount, flowCount, largestFlow?: { source, target, value } }`.
+- `SankeyNodeLabelContext`: `{ name, incoming?: { total, sources[] }, outgoing?: { total, targets[] } }`.
+- `SankeyEdgeLabelContext`: `{ source, target, value }`.
+
+```js
+new ApexSankey(el, {
+  locale: {
+    messages: {
+      edgeAriaLabel: ({ source, target, value }) =>
+        `Flujo de ${source} a ${target}: ${value} unidades`,
+      nodesGroupLabel: 'Nodos del Sankey',
+    },
+  },
+});
+```
+
+New exported types for this feature: `LocaleOptions`, `SankeyMessages`, `TextDirection` (`'ltr' | 'rtl' | 'auto'`), the label-context types (`SankeyDiagramLabelContext`, `SankeyNodeLabelContext`, `SankeyEdgeLabelContext`), and the `DEFAULT_SANKEY_MESSAGES` constant.
+
+> `locale.messages` localizes only the ARIA (screen-reader) strings. Visible tooltips are localized separately through the existing `tooltipTemplate` / `nodeTooltipTemplate` callbacks, so you keep full control of their markup.
+
 ## Toolbar
 
 ```js

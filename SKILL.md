@@ -11,8 +11,8 @@ description: >
   (`react-apexsankey`, `vue-apexsankey`, `ngx-apexsankey`) over the core API.
 metadata:
   author: ApexCharts
-  version: "1.2.0"
-  library_version: "1.8.0"
+  version: "1.3.0"
+  library_version: "1.10.0"
   category: data-visualization
   tags: [sankey, flow, diagram, charts, svg, apexsankey]
   docs: https://apexcharts.com/docs/apexsankey/
@@ -129,6 +129,7 @@ sankey.render({
 | `tooltipTheme` | `'light' \| 'dark'` | — | Preset overrides for tooltip BG/border/font. |
 | `onNodeClick` | `(node: SankeyNode) => void` | — | Click callback. |
 | `a11y` | `{ enabled, diagramLabel, description }` | `{ enabled: true }` | WCAG 2.1 AA. |
+| `locale` | `{ direction, messages }` | `{ direction: 'ltr' }` | Localization / RTL. `direction: 'ltr' \| 'rtl' \| 'auto'` mirrors the diagram and sets `dir="rtl"`; `messages` is a `Partial<SankeyMessages>` overriding the ARIA strings. See `references/styling-and-interaction.md`. |
 
 ---
 
@@ -242,6 +243,8 @@ Equivalent to setting `tooltipBGColor`, `tooltipBorderColor`, `tooltipFontColor`
 ### 10. License watermark in production
 ❌ Watermark visible.
 ✅ `ApexSankey.setLicense('KEY')` once before any `new ApexSankey(...)`.
+
+> Since 1.10.0, license keys are ECDSA P-256 signature-verified. Unsigned (legacy) keys stay valid until 2027-07-31; re-issue a signed key before then.
 
 ---
 
