@@ -20,8 +20,8 @@ Wrappers handle `destroy()` automatically on unmount, accept reactive props, and
 3. **Every `edge.source` / `edge.target` must reference an existing `node.id`.** Dangling refs silently drop.
 4. **`node.id` must be unique.** Duplicates collide.
 5. **`edge.value` must be a positive number.** Zero / negative produces zero-width bands.
-6. **Cycles are not supported.** ApexSankey is a layered DAG.
-7. **Call `destroy()`** before unmounting in React / Vue / Angular.
+6. **Cycles are supported since 1.11** (rendered as dashed back-edges). On 1.10 and earlier the graph must be a DAG.
+7. **Call `destroy()`** before unmounting in React / Vue / Angular. Since 1.12 it also stops the motion driver, particle layer, and drag handlers.
 8. **Set license once** with `ApexSankey.setLicense('KEY')` at app startup to remove the watermark.
 9. **`tooltipTemplate({ source, target, value })`** is for edges; **`nodeTooltipTemplate({ node, value })`** is for nodes — different shapes.
 10. **`onNodeClick` is in options**, not on the data.
@@ -80,7 +80,7 @@ graph.exportToSvg();                           // optional
 sankey.destroy();                              // before unmount
 ```
 
-Re-renders: re-call `sankey.render(data)` with fresh data. No incremental update API.
+Data changes (1.11+): call `sankey.update(data)` on the live instance. Same topology spring-animates; changed topology morphs (entering flows grow out of their source, removed flows retract). Pre-1.11: re-call `sankey.render(data)`.
 
 ---
 
@@ -90,10 +90,18 @@ Re-renders: re-call `sankey.render(data)` with fresh data. No incremental update
 |---|---|
 | `new ApexSankey(el, opts?)` | Construct. |
 | `render(data)` | Paint. Returns `SankeyGraphRenderer`. Required. |
-| `destroy()` | Tear down. |
+| `update(data)` | (1.11+) Animate the live chart to new data. |
+| `on(event, handler)` / `off` | (1.11+) Typed events: `node:click`, `edge:click`, `node:/edge:mouseenter/mouseleave`, `rendered`, `destroyed`. `on` returns an unsubscribe fn. |
+| `use(plugin)` | (1.11+) Install a plugin. Built-ins: `pathTrace`, `timePlayback`, `drillDown` (`ApexSankey.plugins.*`). |
+| `destroy()` | Tear down (plugins, handlers, DOM, motion). |
 | `getInstanceId()` | Unique id. |
 | `ApexSankey.setLicense(key)` | Static. Call once. |
+| `ApexSankey.registerTheme(name, theme)` | (1.11+) Register a named theme for the `theme` option (built-ins: light, dark, midnight, mint, sunset). |
+| `ApexSankey.buildAlluvialData(input)` | (1.11+) Records-across-dimensions to `{ nodes, edges }`; pair with `axisTitles`. |
+| `ApexSankey.compare(el, config)` | (1.11+) Before/after split view with diff outlines and synced hover. |
 | `graph.exportToSvg()` | Export as SVG file. |
+
+Other 1.11+ options: `type: 'chord'`, `orientation: 'horizontal' | 'vertical'`, `draggableNodes`, `particleFlow`, `nodePalette`, `arcCornerRadius`. Family CSS tokens (1.12+): `--apx-accent`, `--apx-fore`, `--apx-grid`, `--apx-surface`, `--apx-series-N`; precedence: product CSS variable > explicit option > `--apx-*` token > built-in default.
 
 ---
 
@@ -119,9 +127,9 @@ Re-renders: re-call `sankey.render(data)` with fresh data. No incremental update
 ❌ Zero-width band.
 ✅ Positive number; filter out zero-flow edges upstream.
 
-### 6. Cycles
-❌ `a → b → a` — layout breaks.
-✅ Aggregate / break cycles before rendering.
+### 6. Treating cycles as errors on 1.11+
+❌ Filtering out circular links, or reporting dashed back-edges as a bug.
+✅ Cyclic links render as dashed back-edges on purpose (1.11+). Only pre-1.11 requires breaking cycles.
 
 ### 7. No `destroy()` in React/Vue
 ❌ DOM + observer leak.

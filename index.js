@@ -15,6 +15,7 @@ export const referencesDir = join(packageRoot, 'references');
 export const referenceFiles = [
   'data-format.md',
   'framework-wrappers.md',
+  'motion-events-and-plugins.md',
   'styling-and-interaction.md',
 ];
 

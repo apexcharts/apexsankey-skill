@@ -10,6 +10,9 @@
 | `nodeWidth` | `20` | Width of node rectangles (px). |
 | `nodeBorderColor` | `null` | `null` disables. |
 | `nodeBorderWidth` | `1` | px |
+| `nodePalette` | none | (1.11+) Ordered fills cycled across nodes without their own `color`. Overrides the built-in palette; a `theme` sets this for you. |
+| `theme` | none | (1.11+) Named or inline theme seeding coordinated defaults. See [Themes](#themes-111) below. |
+| `orientation` | `'horizontal'` | (1.11+) `'vertical'` lays ranks in rows, flows top→bottom. |
 | `whitespace` | `0.18` | Vertical-margin fraction. Lower = taller nodes. |
 | `spacing` | `20` | Horizontal gap between layers (px). |
 | `viewPortWidth` / `viewPortHeight` | `800` / `500` | Internal SVG viewport. |
@@ -68,11 +71,29 @@ new ApexSankey(el, { enableTooltip: false });
 ```js
 new ApexSankey(el, {
   highlightConnectedPath: true,    // default
-  dimOpacity: 0.15,                // unrelated elements fade to this opacity
+  dimOpacity: 0.2,                 // unrelated elements fade to this opacity
 });
 ```
 
 Hovering a node or edge keeps the connected flow at full opacity and dims everything else to `dimOpacity`. Set `highlightConnectedPath: false` to disable.
+
+Since 1.11 hover gives a one-hop preview, and **clicking** a node or flow pins an isolate of its full upstream and downstream path (cycle-guarded). Click the same element again, or click another, to release or move the isolate.
+
+### Draggable nodes (1.11+)
+
+```js
+new ApexSankey(el, { draggableNodes: true });   // default false
+```
+
+Nodes can be repositioned with a pointer (mouse, touch, or pen); connected flows follow the node live. The manual position holds until the next `render()`/`update()` recomputes the layout. Sankey projection only (not chord).
+
+### Particle flow (1.11+)
+
+```js
+new ApexSankey(el, { particleFlow: true });     // default false
+```
+
+Animates particles drifting along each flow ribbon, with density proportional to the ribbon's value, to show direction and volume. Purely decorative; automatically skipped under `prefers-reduced-motion`. Sankey projection only.
 
 ### Click callbacks
 
@@ -86,7 +107,7 @@ new ApexSankey(el, {
 
 `node.data` is the raw `NodeData` (`{ id, title, color, ... }`); `node.value` is the aggregate flow into that node.
 
-> There is no built-in `onEdgeClick`. Wrap the chart container and use event delegation on the SVG path elements if you need it.
+> There is no `onEdgeClick` option. Since 1.11, use the typed event bus instead: `sankey.on('edge:click', ({ source, target, value, originalEvent }) => { ... })`. See `references/motion-events-and-plugins.md`. On 1.10 and earlier, wrap the chart container and use event delegation on the SVG path elements.
 
 ## Animation
 
@@ -97,6 +118,81 @@ new ApexSankey(el, {
 ```
 
 The entrance animation plays only on the first render. It is automatically disabled when the user has `prefers-reduced-motion: reduce` set.
+
+Data-change animation is separate: since 1.11, `sankey.update(data)` springs or morphs the live diagram to new data. See `references/motion-events-and-plugins.md`.
+
+## Themes (1.11+)
+
+Pass `theme` to seed a coordinated set of visual defaults in one shot. Built-ins: `'light'` (the default look), `'dark'`, `'midnight'`, `'mint'`, `'sunset'`. A theme sits between the built-in defaults and your explicit options, so anything you set yourself still wins.
+
+```js
+const sankey = new ApexSankey(el, { theme: 'dark' });
+```
+
+Register a brand preset once with the static `ApexSankey.registerTheme(name, theme)`, then reference it by name:
+
+```js
+ApexSankey.registerTheme('acme', {
+  nodePalette: ['#ff5a5f', '#087f8c', '#5d2e8c'],
+  fontColor: '#1a1a1a',
+  canvasStyle: 'background: #faf7f2; box-sizing: border-box;',
+});
+const sankey = new ApexSankey(el, { theme: 'acme' });
+```
+
+`theme` also accepts an inline `SankeyTheme` object. Its fields (all optional; omitted fields keep the defaults):
+
+| `SankeyTheme` field | Type | Description |
+|---|---|---|
+| `nodePalette` | `string[]` | Ordered node fill colors, cycled across nodes without their own `color`. |
+| `fontColor` | `string` | CSS color for node labels. |
+| `edgeOpacity` | `number` | Opacity of the flow ribbons (0-1). |
+| `edgeGradientFill` | `boolean` | Fill ribbons with a source→target gradient. |
+| `nodeBorderColor` | `string \| null` | CSS color for the node border (`null` disables). |
+| `canvasStyle` | `string` | CSS on the SVG root container, typically background and border. |
+
+## CSS variables and family `--apx-*` tokens
+
+Options can also be driven from CSS custom properties, resolved per render pass. Precedence, highest first:
+
+```
+product CSS variable  >  explicit option  >  --apx-* token  >  built-in default
+```
+
+An option set to a value equal to its built-in default is indistinguishable from one left alone, and the token wins there. Set a product variable if you need a value pinned regardless.
+
+**Product variables** (`--apex-sankey-*`) pin individual Sankey options from CSS, above everything else: `--apex-sankey-node-width`, `--apex-sankey-node-border-color`, `--apex-sankey-node-border-width`, `--apex-sankey-edge-opacity`, `--apex-sankey-edge-gradient`, `--apex-sankey-font-family`, `--apex-sankey-label-color`, `--apex-sankey-label-font-size`, `--apex-sankey-tooltip-bg`, `--apex-sankey-tooltip-border-color`, `--apex-sankey-tooltip-font-color`, `--apex-sankey-tooltip-theme`.
+
+**Family tokens** (`--apx-*`, added in 1.12) are shared by every chart in the ApexCharts family, so a page states its brand once and trees, flow diagrams, Gantt charts and plots all follow:
+
+| Token | Role |
+|---|---|
+| `--apx-accent` | The color that means interactive or selected. |
+| `--apx-fore` | Text and anything that must stay legible on the surface. |
+| `--apx-grid` | Hairlines: borders, gridlines, connectors. |
+| `--apx-surface` | The plane content sits on. |
+| `--apx-series-1` … `--apx-series-N` | An ordered categorical palette (1-based, stops at the first gap). |
+
+```css
+:root {
+  --apx-accent: #5b21b6;
+  --apx-fore: #101828;
+  --apx-grid: #e4e7ec;
+  --apx-surface: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --apx-fore: #f8fafc;
+    --apx-grid: #334155;
+    --apx-surface: #0f172a;
+  }
+}
+```
+
+Custom properties inherit, so declaring them on `:root` reaches every chart on the page. They resolve below anything configured explicitly, so adopting them cannot change a chart that was already themed.
+
+**Family named themes**: `registerTheme` from `@apex/commons` records a named set of tokens on a registry shared by the whole family; a named family theme's tokens sit one layer below the CSS `--apx-*` tokens. This registry is complementary to `ApexSankey.registerTheme`: a Sankey theme carries diagram-specific defaults (palette, edge opacity, canvas style), while a family theme carries the cross-product token roles. Both are referenced through the same `theme` option.
 
 ## Accessibility (`a11y`)
 
