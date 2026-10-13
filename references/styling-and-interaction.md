@@ -192,7 +192,7 @@ An option set to a value equal to its built-in default is indistinguishable from
 
 Custom properties inherit, so declaring them on `:root` reaches every chart on the page. They resolve below anything configured explicitly, so adopting them cannot change a chart that was already themed.
 
-**Family named themes**: `registerTheme` from `@apex/commons` records a named set of tokens on a registry shared by the whole family; a named family theme's tokens sit one layer below the CSS `--apx-*` tokens. This registry is complementary to `ApexSankey.registerTheme`: a Sankey theme carries diagram-specific defaults (palette, edge opacity, canvas style), while a family theme carries the cross-product token roles. Both are referenced through the same `theme` option.
+**Family named themes**: a named set of tokens on the registry the whole Apex family shares. Register one with `ApexCharts.registerTheme(name, { tokens })` when ApexCharts is on the page (the `@apex/commons` module that implements the registry is internal and not published to npm); a named family theme's tokens sit one layer below the CSS `--apx-*` tokens. This registry is complementary to `ApexSankey.registerTheme`: a Sankey theme carries diagram-specific defaults (palette, edge opacity, canvas style), while a family theme carries the cross-product token roles. Both are referenced through the same `theme` option.
 
 ## Accessibility (`a11y`)
 

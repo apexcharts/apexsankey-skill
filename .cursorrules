@@ -17,14 +17,16 @@ Wrappers handle `destroy()` automatically on unmount, accept reactive props, and
 
 1. **Data goes to `render(data)`, not the constructor.** Constructor takes `(element, options)`; `render({ nodes, edges, options })` paints.
 2. **`render()` is required** — the constructor alone does nothing visible.
-3. **Every `edge.source` / `edge.target` must reference an existing `node.id`.** Dangling refs silently drop.
-4. **`node.id` must be unique.** Duplicates collide.
-5. **`edge.value` must be a positive number.** Zero / negative produces zero-width bands.
-6. **Cycles are supported since 1.11** (rendered as dashed back-edges). On 1.10 and earlier the graph must be a DAG.
+3. **Every `edge.source` / `edge.target` must reference an existing `node.id`.** An unknown id becomes an unlabeled phantom node.
+4. **`node.id` must be unique.** With duplicates, the last declaration wins.
+5. **`edge.value` must be a positive number.** Negative breaks the geometry; `0` draws an invisible flow.
+6. **Cycles are supported** (rendered as dashed back-edges, 1.11+). Do not break them.
 7. **Call `destroy()`** before unmounting in React / Vue / Angular. Since 1.12 it also stops the motion driver, particle layer, and drag handlers.
 8. **Set license once** with `ApexSankey.setLicense('KEY')` at app startup to remove the watermark.
 9. **`tooltipTemplate({ source, target, value })`** is for edges; **`nodeTooltipTemplate({ node, value })`** is for nodes — different shapes.
 10. **`onNodeClick` is in options**, not on the data.
+11. **`edge.type` only tells parallel edges apart.** Two edges with the same `source`, `target`, and `type` collapse into the last one (values are not summed). Not used in tooltips or styling.
+12. **A node with no edges is not drawn.**
 
 ---
 
@@ -61,11 +63,7 @@ const graph = sankey.render({
 });
 ```
 
-Manual layer pinning via `options.order`:
-
-```js
-options: { ...sankey.options, order: [[['a','b']], [['c']], [['d']]] }
-```
+Node placement is automatic (rank assignment, then crossing minimization). There is no public option to pin the order in 1.12: an `order` array in `options` is not read. `draggableNodes: true` allows manual adjustment until the next `render()` / `update()`.
 
 ---
 

@@ -12,4 +12,4 @@ Same approach — Windsurf also reads `.cursorrules`.
 
 ## Verification
 
-Ask Cursor to generate a Sankey diagram with manual layer order and custom edge colors. It should pass `{ nodes, edges, options }` to `sankey.render()` and remember to include `options.order` for the manual layout.
+Ask Cursor to generate a Sankey diagram with custom node colors and gradient edges. It should pass `{ nodes, edges, options }` to `sankey.render()`, give each node a unique `id`, and leave node placement to the automatic layout.

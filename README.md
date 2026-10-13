@@ -18,7 +18,7 @@ AI models routinely get Sankey-diagram code wrong: passing data to the construct
 
 ### Coverage
 
-- **Data format**: `{ nodes, edges, options }`, layer ordering, edge grouping, cyclic links (1.11+)
+- **Data format**: `{ nodes, edges, options }`, automatic layer layout, parallel edges, cyclic links (1.11+)
 - **Projections**: layered Sankey, alluvial via `buildAlluvialData` + `axisTitles`, chord via `type: 'chord'`
 - **Lifecycle**: `setLicense()`, construct, `render()`, animated `update()`, `destroy()`, exporting SVG
 - **Tooltips**: separate edge / node template shapes
@@ -67,7 +67,7 @@ const data  = await readFile(referencePath('data-format.md'), 'utf8');
 ├── SKILL.md                           # Main entry point
 ├── .cursorrules                       # Self-contained Cursor / Windsurf version
 ├── references/
-│   ├── data-format.md                 # nodes, edges, options, layer order, projections
+│   ├── data-format.md                 # nodes, edges, options, layer layout, projections
 │   ├── styling-and-interaction.md     # tooltips, themes, tokens, a11y, callbacks
 │   ├── motion-events-and-plugins.md   # update(), events, plugins, compare
 │   └── framework-wrappers.md          # React, Vue, Angular

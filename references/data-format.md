@@ -20,7 +20,8 @@ interface SankeyGraphNode {
 }
 ```
 
-- `id` must be unique. Duplicates silently collide.
+- `id` must be unique. With duplicates, the last declaration overwrites the earlier ones.
+- A node no edge references is not drawn: the layout builds its node set from the edges.
 - `title` is rendered beside / inside the node and used in default tooltips.
 - `color` overrides the palette for this node (and tints the gradient on edges that touch it when `edgeGradientFill: true`).
 
@@ -30,41 +31,19 @@ interface SankeyGraphNode {
 interface SankeyGraphEdge {
   source: string;    // REQUIRED, must match a node.id
   target: string;    // REQUIRED, must match a node.id
-  value: number;     // REQUIRED, > 0
-  type: string;      // category label — use the same string for edges that group together
+  value: number;     // REQUIRED, not negative (0 draws an invisible flow)
+  type: string;      // tells parallel edges between the same two nodes apart
 }
 ```
 
-- Width of the band is proportional to `value`.
-- `type` groups edges visually and is shown in the default tooltip.
-- Cycles are supported since 1.11: a circular link (e.g. `recycle → raw` upstream) is routed and rendered as a dashed back-edge returning against the flow direction, so loops read clearly. Do not treat cycles as invalid data on 1.11+. On 1.10 and earlier the graph must be a DAG: aggregate or break cycles in your data layer.
+- Width of the band is proportional to `value`. A negative value breaks the band geometry; a graph where every value is `0` cannot be sized.
+- An endpoint that matches no `node.id` is not dropped: ApexSankey creates an unlabeled phantom node for it.
+- `type` is the key that tells parallel edges apart. Two edges with the same `source`, `target`, and `type` collapse into one, the later replacing the earlier (values are not summed). It is not shown in the default tooltip and does not affect styling. The TypeScript types declare it required; at runtime it may be omitted, which counts as one shared empty type.
+- Cycles are supported: a circular link (e.g. `recycle → raw` upstream) is routed and rendered as a dashed back-edge returning against the flow direction, so loops read clearly (1.11+; 1.10 lays them out but draws the back-edge solid). Do not treat cycles as invalid data.
 
-## Layer & band ordering
+## Layer layout
 
-By default ApexSankey assigns nodes to layers automatically using a longest-path algorithm. Pin layout with `options.order`:
-
-```ts
-order: string[][][];     // layer → band → node-id[]
-```
-
-- **Layer**: a vertical column.
-- **Band**: a contiguous group of nodes inside a layer (used for visual separation).
-
-```js
-sankey.render({
-  nodes, edges,
-  options: {
-    ...sankey.options,
-    order: [
-      [['source-a', 'source-b']],         // layer 0, one band, two nodes top-to-bottom
-      [['hub']],                          // layer 1
-      [['sink-1', 'sink-2'], ['sink-3']], // layer 2, two bands (gap between)
-    ],
-  },
-});
-```
-
-When `order` is set, ApexSankey skips both the rank assignment and the ordering algorithm.
+ApexSankey places nodes automatically. Each node's column (rank) comes from rank assignment over the edges, and the order of nodes within a column from a crossing-minimization pass. 1.12 has no public option to pin either: an `order` array in `options` is not read, so earlier examples that passed one were laying out automatically all along. For manual adjustment, `draggableNodes: true` lets a reader drag nodes; the positions hold until the next `render()` / `update()`.
 
 ## Worked example — energy flow
 
@@ -156,8 +135,11 @@ sankey.render({
 
 | ❌ | ✅ |
 |---|---|
-| Edge points at a non-existent node id | Validate `source` / `target` are in `nodes` before render |
-| Duplicate `node.id` | Make ids unique (use `crypto.randomUUID()` if needed) |
-| `value: 0` or negative | Filter out at the data layer; positive values only |
-| Breaking cycles on 1.11+ (or reporting dashed back-edges as a bug) | Cyclic links are supported and render dashed on purpose; only pre-1.11 requires a DAG |
+| Edge points at a non-existent node id (it becomes an unlabeled phantom node) | Validate `source` / `target` are in `nodes` before render |
+| Duplicate `node.id` (the last declaration wins) | Make ids unique (use `crypto.randomUUID()` if needed) |
+| `value: 0` (invisible flow) or negative (broken geometry) | Filter out at the data layer; positive values only |
+| Two edges with the same `source`, `target`, and `type` (only the last survives) | Merge them into one edge, or give each a distinct `type` |
+| A node with no edges (not drawn) | Remove it, or add the flow it represents |
+| Passing `options.order` to pin the layout (it is not read) | Let the layout place nodes; use `draggableNodes` for manual adjustment |
+| Breaking cycles (or reporting dashed back-edges as a bug) | Cyclic links are supported and render dashed on purpose |
 | `sankey.render({ nodes, edges })` (missing `options`) | Always include `options: sankey.options` in the render payload |

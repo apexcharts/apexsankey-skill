@@ -5,7 +5,7 @@ description: >
   asks to create, configure, render, or troubleshoot a Sankey diagram, flow
   chart, energy/budget/traffic flow visualization, or multi-stage allocation
   diagram with `apexsankey`. Covers the `{ nodes, edges, options }` data shape,
-  layer ordering, edge gradients, path highlighting, custom tooltips, the
+  automatic layer layout, edge gradients, path highlighting, custom tooltips, the
   `setLicense` watermark, animated `update()`, alluvial and chord projections,
   circular links, themes and the family `--apx-*` tokens, the plugin/event API,
   the comparison split-view, and framework integration (React / Vue / Angular).
@@ -13,7 +13,7 @@ description: >
   (`react-apexsankey`, `vue-apexsankey`, `ngx-apexsankey`) over the core API.
 metadata:
   author: ApexCharts
-  version: "1.4.1"
+  version: "1.4.2"
   library_version: "1.12.2"
   category: data-visualization
   tags: [sankey, flow, diagram, charts, svg, apexsankey]
@@ -34,19 +34,21 @@ metadata:
 ## 1. Critical Rules
 
 1. **Data is `{ nodes, edges, options }`** passed to `render(data)`, **not** to the constructor. Constructor takes `(element, options)`; `render(data)` paints.
-2. **Every `edge.source` and `edge.target` must reference an existing `node.id`.** Dangling references silently drop the edge.
-3. **`node.id` must be unique.** Duplicates collide and one node is silently dropped.
-4. **`edge.value` is required and must be > 0.** Zero or negative values produce zero-width bands.
-5. **`edge.type` is a category label** (used for grouping & tooltips). Use the same string across edges that should group together.
+2. **Every `edge.source` and `edge.target` must reference an existing `node.id`.** An unknown id does not drop the edge: ApexSankey creates an unlabeled phantom node for it, which still takes up space in the layout.
+3. **`node.id` must be unique.** With duplicates, the last declaration overwrites the earlier ones.
+4. **`edge.value` is required, numeric, and not negative.** A negative value breaks the band geometry. `0` draws an invisible zero-width flow, and a node fed only by zero flows loses its label. If every value is `0` there is nothing to size the layout by. Filter out empty flows in your data layer.
+5. **`edge.type` only tells parallel edges apart.** Two edges with the same `source`, `target`, and `type` collapse into one: the later edge replaces the earlier, and the values are not summed. Merge such edges, or give each a distinct `type`. It is not shown in tooltips or used for styling. The TypeScript types declare it required; at runtime it may be omitted.
 6. **`render(data)` returns a `SankeyGraphRenderer`** — keep it if you want to call `exportToSvg()` later.
 7. **Use `update(data)` to change data on a live chart** (1.11+). Same-topology updates spring-animate; topology changes morph (entering flows grow out of their source, removed flows retract). `render()` is for the first paint.
-8. **Cycles are supported since 1.11.** Circular links (e.g. `recycle → raw`) render as dashed back-edges returning upstream. On 1.10 and earlier the graph must be a DAG: break or aggregate cycles there.
+8. **Cycles are supported.** Circular links (e.g. `recycle → raw`) render as dashed back-edges returning upstream (1.11+; 1.10 lays them out too, but draws the back-edge solid). Do not break or filter them.
 9. **Call `destroy()`** before unmounting in React / Vue / Angular. Skipping it leaks tooltip DOM and watermark observers; since 1.12 it also releases the motion driver's rAF loop, the particle layer, drag handlers, and the a11y helper (a chart dropped mid-morph would otherwise keep ticking into detached DOM).
 10. **`tooltipTemplate` is for edges; `nodeTooltipTemplate` is for nodes.** They have different `content` shapes.
 11. **`height: 'auto'`** derives height from width at a ~1.6:1 ratio. Use a numeric `height` to lock it.
 12. **`onNodeClick` lives in options, not on the data.** For edges (and richer payloads) use the 1.11+ event bus: `sankey.on('edge:click', handler)`.
 13. **Set the license key once** at app startup with `ApexSankey.setLicense('KEY')` to remove the watermark.
-14. **Same `{ nodes, edges }` model, three projections** (1.11+): layered Sankey (default), alluvial (`ApexSankey.buildAlluvialData(...)` plus `axisTitles`), chord (`type: 'chord'`).
+14. **Same `{ nodes, edges }` model, three projections** (1.11+): layered Sankey (default), alluvial (`ApexSankey.buildAlluvialData(...)` plus `axisTitles`), chord (`type: 'chord'`). In chord mode self-loops and zero-value edges are dropped, and parallel edges are kept rather than collapsed.
+15. **A node with no edges is not drawn.** The layout builds its node set from the edges and attaches the declared node data only to ids an edge created.
+16. **Node placement is automatic.** Columns come from rank assignment and the vertical order from crossing minimization. There is no public option to pin the order in 1.12: an `order` array in `options` is not read. `draggableNodes: true` lets a reader reposition nodes until the next `render()` / `update()`.
 
 ---
 
@@ -88,23 +90,9 @@ sankey.render({
 });
 ```
 
-### Manual layer ordering
+### Layer layout
 
-By default ApexSankey assigns nodes to layers automatically. To pin layout, pass `options.order` — a list of layers, each a list of bands, each a list of node ids:
-
-```js
-sankey.render({
-  nodes, edges,
-  options: {
-    ...sankey.options,
-    order: [
-      [['a', 'b']],     // layer 0, one band, two nodes
-      [['c']],          // layer 1
-      [['d']],          // layer 2
-    ],
-  },
-});
-```
+ApexSankey places nodes automatically: each node's column comes from rank assignment, and the order within a column from crossing minimization. 1.12 has no public option to pin that order. An `order` array passed in `options` is ignored, so do not generate one.
 
 ---
 
@@ -270,19 +258,19 @@ Equivalent to setting `tooltipBGColor`, `tooltipBorderColor`, `tooltipFontColor`
 
 ### 3. Dangling `source` / `target`
 ❌ `edges: [{ source: 'x', target: 'y', value: 5 }]` when `'x'` / `'y'` aren't in `nodes`.
-✅ Every edge endpoint must match a `node.id`. Dangling edges silently drop.
+✅ Every edge endpoint must match a `node.id`. An unknown id becomes an unlabeled phantom node in the diagram.
 
 ### 4. Duplicate `node.id`
-❌ Two nodes with `id: 'a'` — second is silently dropped, edges may target the wrong one.
+❌ Two nodes with `id: 'a'`: the last declaration overwrites the earlier ones.
 ✅ Ensure ids are unique.
 
 ### 5. `value: 0` or negative
-❌ `{ source: 'a', target: 'b', value: 0 }` — zero-width band.
+❌ `{ source: 'a', target: 'b', value: -5 }` breaks the band geometry; `value: 0` draws an invisible flow.
 ✅ Use a positive number; filter out zero-flow edges in your data layer.
 
-### 6. Treating cycles as an error (or expecting them pre-1.11)
-❌ Filtering out circular links on 1.11+, or reporting dashed back-edges as a rendering bug.
-✅ Since 1.11 cyclic links are supported and intentionally render as dashed ribbons returning upstream. Only on 1.10 and earlier must you pre-aggregate or break cycles.
+### 6. Treating cycles as an error
+❌ Filtering out circular links, or reporting dashed back-edges as a rendering bug.
+✅ Cyclic links are supported and intentionally render as dashed ribbons returning upstream (1.11+).
 
 ### 7. Not destroying on unmount (React / Vue)
 ❌ — tooltip DIVs and observers leak.
@@ -308,6 +296,14 @@ Equivalent to setting `tooltipBGColor`, `tooltipBorderColor`, `tooltipFontColor`
 ❌ `{ type: 'chord', draggableNodes: true, particleFlow: true, orientation: 'vertical' }` and wondering why nothing changes.
 ✅ Chord reuses tooltips, node/edge events, and the palette only. Orientation, RTL mirror, animated relayout, dragging, particles, and drill-down apply to the Sankey projection.
 
+### 13. Parallel edges with the same `type`
+❌ `{ source: 'a', target: 'b', value: 10, type: 'x' }` and `{ source: 'a', target: 'b', value: 1, type: 'x' }`: only the second survives, so the diagram shows 1, not 11.
+✅ Merge them into one edge with `value: 11`, or give each a distinct `type` if they really are separate flows.
+
+### 14. Pinning node order with `options.order`
+❌ `options: { ...sankey.options, order: [[['a', 'b']], [['c']]] }`: the array is not read, and the layout stays automatic.
+✅ Let the layout place nodes, or enable `draggableNodes` for manual adjustment.
+
 > Since 1.10.0, license keys are ECDSA P-256 signature-verified. Unsigned (legacy) keys stay valid until 2027-07-31; re-issue a signed key before then.
 
 ---
@@ -316,7 +312,7 @@ Equivalent to setting `tooltipBGColor`, `tooltipBorderColor`, `tooltipFontColor`
 
 | Topic | Reference File |
 |---|---|
-| Data shape, ordering, custom colors, edge grouping, cyclic links, alluvial and chord projections | `references/data-format.md` |
+| Data shape, layer layout, custom colors, parallel edges, cyclic links, alluvial and chord projections | `references/data-format.md` |
 | Tooltips, accessibility, animation, interaction, themes, `--apx-*` tokens, draggable nodes, particle flow | `references/styling-and-interaction.md` |
 | `update()` motion, events, plugin API, built-in plugins, comparison split-view, `destroy()` | `references/motion-events-and-plugins.md` |
 | React / Vue / Angular wrappers | `references/framework-wrappers.md` |
