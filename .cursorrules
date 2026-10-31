@@ -22,7 +22,7 @@ Wrappers handle `destroy()` automatically on unmount, accept reactive props, and
 5. **`edge.value` must be a positive number.** Negative breaks the geometry; `0` draws an invisible flow.
 6. **Cycles are supported** (rendered as dashed back-edges, 1.11+). Do not break them.
 7. **Call `destroy()`** before unmounting in React / Vue / Angular. Since 1.12 it also stops the motion driver, particle layer, and drag handlers.
-8. **Set license once** with `ApexSankey.setLicense('KEY')` at app startup to remove the watermark.
+8. **Set license once** with `ApexSankey.setLicense('KEY')` at app startup. Without a key the chart renders with a trial watermark; production use needs one.
 9. **`tooltipTemplate({ source, target, value })`** is for edges; **`nodeTooltipTemplate({ node, value })`** is for nodes — different shapes.
 10. **`onNodeClick` is in options**, not on the data.
 11. **`edge.type` only tells parallel edges apart.** Two edges with the same `source`, `target`, and `type` collapse into the last one (values are not summed). Not used in tooltips or styling.
@@ -63,7 +63,7 @@ const graph = sankey.render({
 });
 ```
 
-Node placement is automatic (rank assignment, then crossing minimization). There is no public option to pin the order in 1.12: an `order` array in `options` is not read. `draggableNodes: true` allows manual adjustment until the next `render()` / `update()`.
+Node placement is automatic (rank assignment, then crossing minimization). There is no option to pin the order: an `order` array in `options` is not read and has no effect. `draggableNodes: true` allows manual adjustment until the next `render()` / `update()`.
 
 ---
 
@@ -78,6 +78,8 @@ graph.exportToSvg();                           // optional
 sankey.destroy();                              // before unmount
 ```
 
+Since 1.13 constructing, rendering and `destroy()` no longer empty the container: children it held when the chart was constructed stay (`ApexSankey.compare(el, ...)` still replaces `el`'s content). A new `ApexSankey` on an element that already holds a live chart destroys the old one first. Works inside a shadow root (pass an element inside it as the container); styles, tooltips and keyboard focus stay inside it.
+
 Data changes (1.11+): call `sankey.update(data)` on the live instance. Same topology spring-animates; changed topology morphs (entering flows grow out of their source, removed flows retract). Pre-1.11: re-call `sankey.render(data)`.
 
 ---
@@ -91,7 +93,7 @@ Data changes (1.11+): call `sankey.update(data)` on the live instance. Same topo
 | `update(data)` | (1.11+) Animate the live chart to new data. |
 | `on(event, handler)` / `off` | (1.11+) Typed events: `node:click`, `edge:click`, `node:/edge:mouseenter/mouseleave`, `rendered`, `destroyed`. `on` returns an unsubscribe fn. |
 | `use(plugin)` | (1.11+) Install a plugin. Built-ins: `pathTrace`, `timePlayback`, `drillDown` (`ApexSankey.plugins.*`). |
-| `destroy()` | Tear down (plugins, handlers, DOM, motion). |
+| `destroy()` | Tear down (plugins, handlers, the chart's DOM, motion). Keeps what the container held before construction (1.13). |
 | `getInstanceId()` | Unique id. |
 | `ApexSankey.setLicense(key)` | Static. Call once. |
 | `ApexSankey.registerTheme(name, theme)` | (1.11+) Register a named theme for the `theme` option (built-ins: light, dark, midnight, mint, sunset). |
@@ -142,7 +144,7 @@ Other 1.11+ options: `type: 'chord'`, `orientation: 'horizontal' | 'vertical'`, 
 ✅ `sankey.render({ nodes, edges, options: sankey.options })`.
 
 ### 10. License watermark
-❌ No license call.
+❌ No license call: the chart renders with a trial watermark.
 ✅ `ApexSankey.setLicense('KEY')` once at app startup.
 
 ---

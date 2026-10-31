@@ -13,8 +13,8 @@ description: >
   (`react-apexsankey`, `vue-apexsankey`, `ngx-apexsankey`) over the core API.
 metadata:
   author: ApexCharts
-  version: "1.4.2"
-  library_version: "1.12.2"
+  version: "1.5.0"
+  library_version: "1.13.0"
   category: data-visualization
   tags: [sankey, flow, diagram, charts, svg, apexsankey]
   docs: https://apexcharts.com/docs/apexsankey/
@@ -48,7 +48,7 @@ metadata:
 13. **Set the license key once** at app startup with `ApexSankey.setLicense('KEY')` to remove the watermark.
 14. **Same `{ nodes, edges }` model, three projections** (1.11+): layered Sankey (default), alluvial (`ApexSankey.buildAlluvialData(...)` plus `axisTitles`), chord (`type: 'chord'`). In chord mode self-loops and zero-value edges are dropped, and parallel edges are kept rather than collapsed.
 15. **A node with no edges is not drawn.** The layout builds its node set from the edges and attaches the declared node data only to ids an edge created.
-16. **Node placement is automatic.** Columns come from rank assignment and the vertical order from crossing minimization. There is no public option to pin the order in 1.12: an `order` array in `options` is not read. `draggableNodes: true` lets a reader reposition nodes until the next `render()` / `update()`.
+16. **Node placement is automatic.** Columns come from rank assignment and the vertical order from crossing minimization. There is no option to pin the order: an `order` array in `options` is not read and has no effect. `draggableNodes: true` lets a reader reposition nodes until the next `render()` / `update()`.
 
 ---
 
@@ -92,7 +92,7 @@ sankey.render({
 
 ### Layer layout
 
-ApexSankey places nodes automatically: each node's column comes from rank assignment, and the order within a column from crossing minimization. 1.12 has no public option to pin that order. An `order` array passed in `options` is ignored, so do not generate one.
+ApexSankey places nodes automatically: each node's column comes from rank assignment, and the order within a column from crossing minimization. There is no option to pin that order. An `order` array passed in `options` is ignored, so do not generate one.
 
 ---
 
@@ -138,7 +138,7 @@ ApexSankey places nodes automatically: each node's column comes from rank assign
 ```js
 import { ApexSankey } from 'apexsankey';
 
-ApexSankey.setLicense('KEY');         // optional, once at app startup
+ApexSankey.setLicense('KEY');         // once at app startup; runs without it, but with a trial watermark
 
 const sankey = new ApexSankey(el, {   // 1. construct (sets dimensions)
   width: 800, height: 500,
@@ -152,6 +152,8 @@ sankey.update(nextData);              // 4. (optional) animate to new data
 
 sankey.destroy();                     // 5. tear down before unmount
 ```
+
+**The container keeps its other content (1.13+)**: constructing, rendering and `destroy()` no longer empty the element. The children it held when the chart was constructed stay; `destroy()` removes everything else (the SVG, toolbar, watermark) as the chart's own, so add your own markup before constructing. Constructing a new `ApexSankey` on an element that already holds a live chart destroys the old one first. `ApexSankey.compare(el, ...)` still replaces the content of `el`.
 
 **Data changes** (1.11+): call `sankey.update(data)` on the live instance. Same topology (same nodes and flows, different values): nodes and ribbons spring to their new places. Different topology: entering flows grow out of their source node, survivors slide, removed flows retract and dissolve. With animation disabled or `prefers-reduced-motion` it redraws instantly. On 1.10 and earlier there is no `update()`: re-call `sankey.render(data)`.
 
@@ -167,9 +169,9 @@ sankey.destroy();                     // 5. tear down before unmount
 | `on(event, handler)` | (1.11+) Subscribe to a typed instance event (`node:*`, `edge:*`, `rendered`, `destroyed`). Returns an unsubscribe function. |
 | `off(event, handler)` | (1.11+) Remove a handler registered with `on`. |
 | `use(plugin)` | (1.11+) Install a `SankeyPlugin`; its teardown runs on `destroy()`. Returns the instance. |
-| `destroy()` | Run plugin teardowns, emit `destroyed`, drop handlers, free DOM/observers/tooltip container; since 1.12 also stops the motion driver, particle layer, drag handlers, and a11y helper. |
+| `destroy()` | Run plugin teardowns, emit `destroyed`, drop handlers, free DOM/observers/tooltip container; since 1.12 also stops the motion driver, particle layer, drag handlers, and a11y helper. Since 1.13 it removes the chart's nodes and keeps the children the container held before construction. |
 | `getInstanceId()` | Unique chart instance id. |
-| `ApexSankey.setLicense(key)` | Static; call once at app startup. |
+| `ApexSankey.setLicense(key)` | Static; call once at app startup. Without a key the chart still renders, but with a trial watermark; production use needs a key. |
 | `ApexSankey.registerTheme(name, theme)` | Static (1.11+); register a named `SankeyTheme` for the `theme` option. |
 | `ApexSankey.buildAlluvialData(input)` | Static (1.11+); turn records-across-dimensions into `{ nodes, edges }` (also a named export `buildAlluvialData`). |
 | `ApexSankey.collapseGroups(data, groups, collapsed)` | Static (1.11+); pure transform collapsing groups into super-nodes (also a named export). |
@@ -285,7 +287,7 @@ Equivalent to setting `tooltipBGColor`, `tooltipBorderColor`, `tooltipFontColor`
 ✅ `sankey.render({ nodes, edges, options: sankey.options })`.
 
 ### 10. License watermark in production
-❌ Watermark visible.
+❌ No license call: the chart works, but renders with a trial watermark. Production use needs a key.
 ✅ `ApexSankey.setLicense('KEY')` once before any `new ApexSankey(...)`.
 
 ### 11. Full re-render for a data change (1.11+)
@@ -315,4 +317,4 @@ Equivalent to setting `tooltipBGColor`, `tooltipBorderColor`, `tooltipFontColor`
 | Data shape, layer layout, custom colors, parallel edges, cyclic links, alluvial and chord projections | `references/data-format.md` |
 | Tooltips, accessibility, animation, interaction, themes, `--apx-*` tokens, draggable nodes, particle flow | `references/styling-and-interaction.md` |
 | `update()` motion, events, plugin API, built-in plugins, comparison split-view, `destroy()` | `references/motion-events-and-plugins.md` |
-| React / Vue / Angular wrappers | `references/framework-wrappers.md` |
+| React / Vue / Angular wrappers, web components (shadow DOM) | `references/framework-wrappers.md` |

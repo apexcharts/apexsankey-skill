@@ -1,6 +1,6 @@
 # Motion, Events, Plugins & Comparison (1.11+)
 
-Everything on this page arrived in apexsankey 1.11 (except where marked 1.12) and is fully additive: 1.10-era code keeps working unchanged.
+Everything on this page arrived in apexsankey 1.11 (except where marked 1.12 or 1.13) and is fully additive: 1.10-era code keeps working unchanged.
 
 ## `update(data)`: animated data changes
 
@@ -21,6 +21,8 @@ sankey.update({ nodes, edges: edges2025, options: sankey.options });
 ## `destroy()`
 
 `destroy()` tears the chart down: runs plugin teardowns, emits `destroyed`, drops all event handlers, and removes injected DOM (tooltip container). Since 1.12 it also releases everything that outlives a render: the relayout/morph motion driver, the particle layer, drag handlers, and the a11y helper. The motion driver owns a rAF loop, so a chart dropped mid-morph without `destroy()` keeps ticking and redrawing into a detached layer until its springs settle. Always call it before discarding the instance; it is idempotent.
+
+Since 1.13 `destroy()` also removes the chart's nodes (the SVG, toolbar, watermark) from the container. It keeps the children the container held when the chart was constructed and removes anything added after, and constructing or rendering no longer clears the container either. Constructing a new `ApexSankey` on an element that already holds a live chart destroys the old one first.
 
 ## Events: `on` / `off`
 
@@ -118,7 +120,7 @@ sankey.use(drillDown({ ...detail, groups }));
 
 ## Comparison split-view: `ApexSankey.compare(el, config)`
 
-Renders two diagrams of the same flow model side by side (a "before" and an "after"), outlines each flow by how it changed (added / removed / changed, computed by the pure `diffGraphs` transform, also a named export), draws a legend, and links the panels so hovering a node or flow highlights its twin in the other. Returns a `SankeyComparison` handle exposing `before`, `after`, the computed `diff`, and `destroy()`.
+Renders two diagrams of the same flow model side by side (a "before" and an "after"), outlines each flow by how it changed (added / removed / changed, computed by the pure `diffGraphs` transform, also a named export), draws a legend, and links the panels so hovering a node or flow highlights its twin in the other. Returns a `SankeyComparison` handle exposing `before`, `after`, the computed `diff`, and `destroy()`. Unlike `new ApexSankey(el)`, `compare(el, ...)` replaces whatever `el` held, so give it an element of its own.
 
 ```js
 const cmp = ApexSankey.compare(el, {

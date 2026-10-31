@@ -1,6 +1,6 @@
 {
   "name": "apexsankey-skill",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "AI coding skill for ApexSankey — structured reference docs that help AI assistants (Claude, Cursor, Copilot, etc.) generate correct ApexSankey code.",
   "keywords": [
     "apexsankey",

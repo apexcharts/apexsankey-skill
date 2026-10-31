@@ -134,6 +134,29 @@ export class FlowComponent {
 }
 ```
 
+## Web components (shadow DOM)
+
+Since 1.13 the core API works inside a shadow root: pass an element inside it as the container. Styles, tooltips and keyboard focus stay inside that root, and CSS variables set on the page or the host element (such as the `--apx-*` tokens) reach the chart. The chart adds its own nodes next to whatever the container held when it was constructed, and `destroy()` keeps those children.
+
+```js
+import { ApexSankey } from 'apexsankey';
+
+class FlowDiagram extends HTMLElement {
+  connectedCallback() {
+    if (!this.el) {
+      this.el = document.createElement('div');
+      this.attachShadow({ mode: 'open' }).appendChild(this.el);
+    }
+    this.sankey = new ApexSankey(this.el, { width: 800, height: 500 });
+    this.sankey.render({ ...this.data, options: this.sankey.options });
+  }
+  disconnectedCallback() {
+    this.sankey?.destroy();
+  }
+}
+customElements.define('flow-diagram', FlowDiagram);
+```
+
 ## Common pitfalls in framework code
 
 | ❌ | ✅ |

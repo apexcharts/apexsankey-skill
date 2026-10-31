@@ -70,7 +70,7 @@ const data  = await readFile(referencePath('data-format.md'), 'utf8');
 │   ├── data-format.md                 # nodes, edges, options, layer layout, projections
 │   ├── styling-and-interaction.md     # tooltips, themes, tokens, a11y, callbacks
 │   ├── motion-events-and-plugins.md   # update(), events, plugins, compare
-│   └── framework-wrappers.md          # React, Vue, Angular
+│   └── framework-wrappers.md          # React, Vue, Angular, shadow DOM
 └── install/
     ├── claude-code.md
     ├── cursor.md

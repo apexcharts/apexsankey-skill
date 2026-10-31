@@ -43,7 +43,7 @@ interface SankeyGraphEdge {
 
 ## Layer layout
 
-ApexSankey places nodes automatically. Each node's column (rank) comes from rank assignment over the edges, and the order of nodes within a column from a crossing-minimization pass. 1.12 has no public option to pin either: an `order` array in `options` is not read, so earlier examples that passed one were laying out automatically all along. For manual adjustment, `draggableNodes: true` lets a reader drag nodes; the positions hold until the next `render()` / `update()`.
+ApexSankey places nodes automatically. Each node's column (rank) comes from rank assignment over the edges, and the order of nodes within a column from a crossing-minimization pass. There is no option to pin either: an `order` array in `options` is not read and has no effect, so earlier examples that passed one were laying out automatically all along. For manual adjustment, `draggableNodes: true` lets a reader drag nodes; the positions hold until the next `render()` / `update()`.
 
 ## Worked example — energy flow
 
