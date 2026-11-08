@@ -153,13 +153,15 @@ const sankey = new ApexSankey(el, { theme: 'acme' });
 
 ## CSS variables and family `--apx-*` tokens
 
-Options can also be driven from CSS custom properties, resolved per render pass. Precedence, highest first:
+Options can also be driven from CSS custom properties, resolved per render pass. Precedence, highest first, from 1.14.0:
 
 ```
-product CSS variable  >  explicit option  >  --apx-* token  >  built-in default
+option you passed  >  --apex-sankey-* variable  >  --apx-* token  >  named theme  >  design system  >  built-in default
 ```
 
-An option set to a value equal to its built-in default is indistinguishable from one left alone, and the token wins there. Set a product variable if you need a value pinned regardless.
+An option counts as passed when it is in the options you gave the constructor, even at its default value; options you did not pass rank last, so a variable or a token themes them. "Named theme" covers a Sankey theme (`theme: 'dark'`), the dark tooltip preset (`tooltipTheme: 'dark'`) and a family theme registered under the same name. "Design system" is Ignite UI, read only with its add-on (below). `--apx-font-family` (1.14.0) sets `fontFamily` the same way.
+
+Through 1.13 the order was `product CSS variable > explicit option > --apx-* token > built-in default`, and an option equal to its built-in default lost to the token.
 
 **Product variables** (`--apex-sankey-*`) pin individual Sankey options from CSS, above everything else: `--apex-sankey-node-width`, `--apex-sankey-node-border-color`, `--apex-sankey-node-border-width`, `--apex-sankey-edge-opacity`, `--apex-sankey-edge-gradient`, `--apex-sankey-font-family`, `--apex-sankey-label-color`, `--apex-sankey-label-font-size`, `--apex-sankey-tooltip-bg`, `--apex-sankey-tooltip-border-color`, `--apex-sankey-tooltip-font-color`, `--apex-sankey-tooltip-theme`.
 
@@ -192,7 +194,31 @@ An option set to a value equal to its built-in default is indistinguishable from
 
 Custom properties inherit, so declaring them on `:root` reaches every chart on the page. They resolve below anything configured explicitly, so adopting them cannot change a chart that was already themed.
 
-**Family named themes**: a named set of tokens on the registry the whole Apex family shares. Register one with `ApexCharts.registerTheme(name, { tokens })` when ApexCharts is on the page (the `@apex/commons` module that implements the registry is internal and not published to npm); a named family theme's tokens sit one layer below the CSS `--apx-*` tokens. This registry is complementary to `ApexSankey.registerTheme`: a Sankey theme carries diagram-specific defaults (palette, edge opacity, canvas style), while a family theme carries the cross-product token roles. Both are referenced through the same `theme` option.
+**Family named themes**: a named set of tokens on the registry the whole Apex family shares. Register one with `ApexCharts.registerTheme(name, { tokens })` when ApexCharts is on the page (the registry lives in the published `apex-commons` package, so `import { registerTheme } from 'apex-commons'` works too); a named family theme's tokens sit one layer below the CSS `--apx-*` tokens. This registry is complementary to `ApexSankey.registerTheme`: a Sankey theme carries diagram-specific defaults (palette, edge opacity, canvas style), while a family theme carries the cross-product token roles. Both are referenced through the same `theme` option.
+
+After changing these variables or tokens without a render (a class on `<html>`, a stylesheet swap), call `sankey.refreshTokens()` (1.14.0).
+
+## Ignite UI theming (from apexsankey 1.14.0)
+
+An opt-in add-on, **free, no licence key**. Load it once and diagrams follow the Ignite UI theme on the page: the node palette, label text, the focus ring, the font, the tooltip, light or dark.
+
+```js
+import 'apexsankey/ignite-ui';
+```
+
+```html
+<!-- without a bundler: before or after apexsankey.min.js -->
+<script src=".../apexsankey/apexsankey.min.js"></script>
+<script src=".../apexsankey/apexsankey.ignite-ui.min.js"></script>
+```
+
+- **Load order.** Before the first render; a diagram rendered earlier picks it up on its next `render()` or `refreshTokens()`. Without the add-on the `--ig-*` tokens are ignored, with no error; `--apx-*` work either way.
+- **What it maps.** The node palette from the theme's colour families (`--ig-primary-seed`, `--ig-secondary-seed`, and so on; the built-in palette fills rows the theme does not declare), label text `--ig-gray-800`, `fontFamily` `--ig-font-family`, the focus ring `--ig-primary-seed`, the tooltip border `--ig-gray-300`, and (Ignite UI 7.5.0+) the tooltip surface and text from `--ig-surface-overlay`.
+- **Ranking.** It is the lowest layer above the built-in defaults: an option you passed, an `--apex-sankey-*` variable, an `--apx-*` token and a named theme all win.
+- **Mode.** When the sheet declares a dark variant and nothing set `tooltipTheme`, the tooltip renders dark. Tooltip colours from the design system apply only while the tooltip theme matches the sheet's variant.
+- **Per diagram.** `designSystem: false` turns it off; `tokens: false` turns off `--apx-*` and the design system together.
+- **Stylesheet swap.** `themeLink.onload = () => sankey.refreshTokens()`. Nodes stay where they are and the view does not move.
+- **Other products.** The add-on also themes ApexTree and ApexGantt on the page (with several, load it from the newest package). ApexCharts charts take `apexcharts/features/ignite-ui`, which themes diagrams too, but on a script-tag page only once `apexcharts.js` has loaded, so load `apexsankey.ignite-ui.min.js` there for the diagrams.
 
 ## Accessibility (`a11y`)
 

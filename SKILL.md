@@ -7,7 +7,8 @@ description: >
   diagram with `apexsankey`. Covers the `{ nodes, edges, options }` data shape,
   automatic layer layout, edge gradients, path highlighting, custom tooltips, the
   `setLicense` watermark, animated `update()`, alluvial and chord projections,
-  circular links, themes and the family `--apx-*` tokens, the plugin/event API,
+  circular links, themes and the family `--apx-*` tokens, the free Ignite UI
+  theming add-on (`apexsankey/ignite-ui`), the plugin/event API,
   the comparison split-view, and framework integration (React / Vue / Angular).
   In React / Vue / Angular projects, prefer the framework wrapper packages
   (`react-apexsankey`, `vue-apexsankey`, `ngx-apexsankey`) over the core API.
@@ -107,6 +108,8 @@ ApexSankey places nodes automatically: each node's column comes from rank assign
 | `axisTitles` | `string[]` | none | Per-rank axis titles (1.11+), drawn above each column (or beside each row when vertical). Index `i` labels rank `i`. Pair with `buildAlluvialData` for alluvial diagrams. |
 | `arcCornerRadius` | `number` | `6` | Chord only (1.11+). Corner radius (px) of each node arc's outer corners; `0` gives sharp corners; clamped to the ring band width. |
 | `theme` | `string \| SankeyTheme` | none | Named built-in (`'light'`, `'dark'`, `'midnight'`, `'mint'`, `'sunset'`), a name registered via `ApexSankey.registerTheme`, or an inline `SankeyTheme` (1.11+). Seeds visual defaults; explicit options still win. |
+| `tokens` | `boolean` | `true` | (1.14.0) `false` stops the diagram reading the `--apx-*` family tokens and the page's design system (its variant included). |
+| `designSystem` | `boolean` | `true` | (1.14.0) `false` stops the diagram reading the page's design system (Ignite UI's `--ig-*` tokens and variant); `--apx-*` still apply. Matters only while the `apexsankey/ignite-ui` add-on is loaded. |
 | `nodePalette` | `string[]` | none | Ordered fills cycled across nodes without their own `color` (1.11+). Overrides the built-in palette; a `theme` sets this for you. |
 | `viewPortWidth` / `viewPortHeight` | `number` | `800` / `500` | Internal SVG viewport. |
 | `spacing` | `number` | `20` | Horizontal gap between node columns (px). |
@@ -171,6 +174,7 @@ sankey.destroy();                     // 5. tear down before unmount
 | `use(plugin)` | (1.11+) Install a `SankeyPlugin`; its teardown runs on `destroy()`. Returns the instance. |
 | `destroy()` | Run plugin teardowns, emit `destroyed`, drop handlers, free DOM/observers/tooltip container; since 1.12 also stops the motion driver, particle layer, drag handlers, and a11y helper. Since 1.13 it removes the chart's nodes and keeps the children the container held before construction. |
 | `getInstanceId()` | Unique chart instance id. |
+| `refreshTokens()` | (1.14.0) Re-read the theme (`--apex-sankey-*` variables, `--apx-*` tokens, the named or registered theme, the page's design system) and repaint: node colours follow the palette as it resolves now (a node's own `color` stays), and so do labels, tooltip, focus ring and particles. Nodes stay put (dragged ones too) and the view does not move. `update()` takes only data, so call this after a stylesheet swap (an Ignite UI light/dark switch) or an add-on loaded after the first render. No-op before `render()`. |
 | `ApexSankey.setLicense(key)` | Static; call once at app startup. Without a key the chart still renders, but with a trial watermark; production use needs a key. |
 | `ApexSankey.registerTheme(name, theme)` | Static (1.11+); register a named `SankeyTheme` for the `theme` option. |
 | `ApexSankey.buildAlluvialData(input)` | Static (1.11+); turn records-across-dimensions into `{ nodes, edges }` (also a named export `buildAlluvialData`). |
@@ -305,6 +309,10 @@ Equivalent to setting `tooltipBGColor`, `tooltipBorderColor`, `tooltipFontColor`
 ### 14. Pinning node order with `options.order`
 ❌ `options: { ...sankey.options, order: [[['a', 'b']], [['c']]] }`: the array is not read, and the layout stays automatic.
 ✅ Let the layout place nodes, or enable `draggableNodes` for manual adjustment.
+
+### 15. Ignite UI theme ignored, or the tooltip stuck light (1.14.0)
+❌ An Ignite UI stylesheet on the page and no add-on: the `--ig-*` tokens are ignored silently. Or `tooltipTheme: 'light'` pinned on a page with a dark Ignite UI theme: the pinned mode blocks the dark variant.
+✅ `import 'apexsankey/ignite-ui'` once (free) before the first render, leave `tooltipTheme` unset, and call `sankey.refreshTokens()` after swapping the Ignite UI stylesheet (`update()` takes only data and does not re-read the theme).
 
 > Since 1.10.0, license keys are ECDSA P-256 signature-verified. Unsigned (legacy) keys stay valid until 2027-07-31; re-issue a signed key before then.
 
