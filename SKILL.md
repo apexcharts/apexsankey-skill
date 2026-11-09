@@ -14,7 +14,7 @@ description: >
   (`react-apexsankey`, `vue-apexsankey`, `ngx-apexsankey`) over the core API.
 metadata:
   author: ApexCharts
-  version: "1.6.0"
+  version: "1.6.1"
   library_version: "1.14.0"
   category: data-visualization
   tags: [sankey, flow, diagram, charts, svg, apexsankey]
