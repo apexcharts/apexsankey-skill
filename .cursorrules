@@ -102,7 +102,7 @@ Data changes (1.11+): call `sankey.update(data)` on the live instance. Same topo
 | `graph.exportToSvg()` | Export as SVG file. |
 
 Other 1.11+ options: `type: 'chord'`, `orientation: 'horizontal' | 'vertical'`, `draggableNodes`, `particleFlow`, `nodePalette`, `arcCornerRadius`. Family CSS tokens (1.12+): `--apx-accent`, `--apx-fore`, `--apx-grid`, `--apx-surface`, `--apx-series-N`; precedence from 1.14.0: option you passed > `--apex-sankey-*` variable > `--apx-*` token > named theme > design system > built-in default (through 1.13: product CSS variable > explicit option > `--apx-*` > default). `--apx-font-family` from 1.14.0.
-Ignite UI (1.14.0, free add-on): `import 'apexsankey/ignite-ui'` (script tag `apexsankey.ignite-ui.min.js`); without it `--ig-*` is silently ignored. Off per diagram: `designSystem: false`; `tokens: false` also drops `--apx-*`. `sankey.refreshTokens()` re-reads the theme after a stylesheet swap (`update()` takes only data). Leave `tooltipTheme` unset so a dark Ignite UI variant can darken the tooltip.
+Ignite UI (1.14.0, add-on, no extra licence key): `import 'apexsankey/ignite-ui'` (script tag `apexsankey.ignite-ui.min.js`); without it `--ig-*` is silently ignored. Off per diagram: `designSystem: false`; `tokens: false` also drops `--apx-*`. `sankey.refreshTokens()` re-reads the theme after a stylesheet swap (`update()` takes only data). Leave `tooltipTheme` unset so a dark Ignite UI variant can darken the tooltip.
 
 ---
 

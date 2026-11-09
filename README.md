@@ -23,7 +23,7 @@ AI models routinely get Sankey-diagram code wrong: passing data to the construct
 - **Lifecycle**: `setLicense()`, construct, `render()`, animated `update()`, `destroy()`, exporting SVG
 - **Tooltips**: separate edge / node template shapes
 - **Interaction**: path highlighting and click-to-isolate, draggable nodes, particle flow, click callbacks, animation, accessibility
-- **Theming**: built-in and registered themes, `nodePalette`, family `--apx-*` tokens, the free Ignite UI add-on and `refreshTokens()` (1.14.0)
+- **Theming**: built-in and registered themes, `nodePalette`, family `--apx-*` tokens, the Ignite UI add-on (no extra licence key) and `refreshTokens()` (1.14.0)
 - **Extensibility**: typed events, plugin API, built-in plugins (`pathTrace`, `timePlayback`, `drillDown`), `ApexSankey.compare` split view
 - **Framework wrappers**: `react-apexsankey`, `vue-apexsankey`, `ngx-apexsankey`
 

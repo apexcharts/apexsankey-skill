@@ -7,8 +7,8 @@ description: >
   diagram with `apexsankey`. Covers the `{ nodes, edges, options }` data shape,
   automatic layer layout, edge gradients, path highlighting, custom tooltips, the
   `setLicense` watermark, animated `update()`, alluvial and chord projections,
-  circular links, themes and the family `--apx-*` tokens, the free Ignite UI
-  theming add-on (`apexsankey/ignite-ui`), the plugin/event API,
+  circular links, themes and the family `--apx-*` tokens, the Ignite UI
+  theming add-on (`apexsankey/ignite-ui`, no extra licence key), the plugin/event API,
   the comparison split-view, and framework integration (React / Vue / Angular).
   In React / Vue / Angular projects, prefer the framework wrapper packages
   (`react-apexsankey`, `vue-apexsankey`, `ngx-apexsankey`) over the core API.
@@ -312,7 +312,7 @@ Equivalent to setting `tooltipBGColor`, `tooltipBorderColor`, `tooltipFontColor`
 
 ### 15. Ignite UI theme ignored, or the tooltip stuck light (1.14.0)
 ❌ An Ignite UI stylesheet on the page and no add-on: the `--ig-*` tokens are ignored silently. Or `tooltipTheme: 'light'` pinned on a page with a dark Ignite UI theme: the pinned mode blocks the dark variant.
-✅ `import 'apexsankey/ignite-ui'` once (free) before the first render, leave `tooltipTheme` unset, and call `sankey.refreshTokens()` after swapping the Ignite UI stylesheet (`update()` takes only data and does not re-read the theme).
+✅ `import 'apexsankey/ignite-ui'` once (no extra licence key) before the first render, leave `tooltipTheme` unset, and call `sankey.refreshTokens()` after swapping the Ignite UI stylesheet (`update()` takes only data and does not re-read the theme).
 
 > Since 1.10.0, license keys are ECDSA P-256 signature-verified. Unsigned (legacy) keys stay valid until 2027-07-31; re-issue a signed key before then.
 

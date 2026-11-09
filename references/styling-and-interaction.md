@@ -200,7 +200,7 @@ After changing these variables or tokens without a render (a class on `<html>`, 
 
 ## Ignite UI theming (from apexsankey 1.14.0)
 
-An opt-in add-on, **free, no licence key**. Load it once and diagrams follow the Ignite UI theme on the page: the node palette, label text, the focus ring, the font, the tooltip, light or dark.
+An opt-in add-on that **needs no licence key of its own**. Load it once and diagrams follow the Ignite UI theme on the page: the node palette, label text, the focus ring, the font, the tooltip, light or dark.
 
 ```js
 import 'apexsankey/ignite-ui';
